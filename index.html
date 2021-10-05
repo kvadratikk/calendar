@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="css/style.css">
+  <title>Document</title>
+</head>
+
+<body>
+
+  <script>
+    let month
+    let year
+
+    const header = document.createElement('div')
+    header.classList.add('header')
+
+    const monthLabel = document.createElement('label')
+    monthLabel.setAttribute('for', 'month')
+    monthLabel.textContent = 'Месяц:'
+
+    const monthSelect = document.createElement('select')
+    monthSelect.id = 'month'
+
+    const monthArr = ['Выбрать месяц', 'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
+
+    for (let i = 0; i < monthArr.length; i++) {
+      const option = new Option(monthArr[i], i)
+
+      monthSelect.append(option)
+    }
+
+    const yearLabel = document.createElement('label')
+    yearLabel.setAttribute('for', 'year')
+    yearLabel.textContent = 'Год:'
+
+    const yearSelect = document.createElement('select')
+    yearSelect.id = 'year'
+
+    const yearArr = ['Выбрать год', 1980]
+
+    for (let i = 1981; yearArr[yearArr.length - 1] < 2021; i++) {
+      yearArr.push(i)
+    }
+
+    for (let i = 0; i < yearArr.length; i++) {
+      const option = new Option(yearArr[i], yearArr[i])
+
+      yearSelect.append(option)
+    }
+
+    const add = document.createElement('button')
+    add.textContent = 'Создать'
+
+    const remove = document.createElement('button')
+    remove.textContent = 'Удалить'
+
+    function check() {
+      if (monthSelect.value < 1 || !isFinite(yearSelect.value)) {
+        add.disabled = true
+      } else {
+        add.disabled = false
+      }
+
+      if (document.querySelectorAll('.calendar').length !== 0) {
+        remove.disabled = false
+      } else {
+        remove.disabled = true
+      }
+    }
+
+    check()
+
+    add.addEventListener('click', calendar)
+    add.addEventListener('click', check)
+
+    remove.addEventListener('click', function () {
+      const calendar = document.querySelector('.calendar')
+
+      calendar.remove()
+
+      check()
+    })
+
+    monthSelect.addEventListener('change', function (event) {
+      month = event.target.value
+
+      check()
+    })
+
+    yearSelect.addEventListener('change', function (event) {
+      year = event.target.value
+
+      check()
+    })
+
+    header.append(monthLabel, monthSelect, yearLabel, yearSelect, add, remove)
+    document.body.append(header)
+
+    function calendar() {
+      const calendar = document.createElement('div')
+      calendar.classList.add('calendar')
+      const top = document.createElement('div')
+      const title = document.createElement('h3')
+      const arrowMonthLeft = document.createElement('button')
+      const arrowMonthRight = document.createElement('button')
+      const arrowYearLeft = document.createElement('button')
+      const arrowYearRight = document.createElement('button')
+
+      arrowMonthLeft.textContent = '<'
+      arrowMonthRight.textContent = '>'
+      arrowYearLeft.textContent = '<<'
+      arrowYearRight.textContent = '>>'
+
+      calendar.appendChild(top)
+      top.append(arrowYearLeft, arrowMonthLeft, title, arrowMonthRight, arrowYearRight)
+
+      let currentYear = year
+      let currentMonth = month
+
+      arrowYearLeft.addEventListener('click', function (event) {
+        const target = event.target
+
+        if (currentYear === 1) return
+        else currentYear--
+
+        redraw(currentYear, currentMonth, target)
+      })
+
+      arrowYearRight.addEventListener('click', function () {
+        const target = event.target
+
+        currentYear++
+
+        redraw(currentYear, currentMonth, target)
+      })
+
+      arrowMonthLeft.addEventListener('click', function () {
+        const target = event.target
+
+        if (currentMonth === 1 && currentYear > 1) {
+          currentMonth = 12
+          currentYear--
+        } else if (currentMonth === 1 && currentYear === 1) {
+          return
+        } else currentMonth--
+
+        redraw(currentYear, currentMonth, target)
+      })
+
+      arrowMonthRight.addEventListener('click', function () {
+        const target = event.target
+
+        if (currentMonth === 12) {
+          currentMonth = 1
+          currentYear++
+        } else currentMonth++
+
+        redraw(currentYear, currentMonth, target)
+      })
+
+      const ul = document.createElement('ul')
+      ul.classList.add('ul-week')
+
+      const liWeeks = []
+
+      const weeks = ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс']
+      for (let i = 0; i <= 6; i++) {
+        const li = document.createElement('li')
+        li.classList.add('week')
+        li.textContent = weeks[i]
+        liWeeks.push(li)
+      }
+
+      ul.append(...liWeeks)
+      calendar.appendChild(ul)
+      document.body.append(calendar)
+
+      draw(year, month)
+    }
+
+    function draw(year, month) {
+      const calendar = document.body.lastElementChild
+
+      build(year, month, calendar)
+    }
+
+    function redraw(year, month, target) {
+      const calendar = target.closest('.calendar')
+
+      const ul = calendar.querySelectorAll('.ul-days')
+      ul.forEach(el => el.remove())
+
+      build(year, month, calendar)
+    }
+
+    function build(year, month, calendar) {
+      const months = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь']
+      const title = calendar.querySelector('h3')
+      title.textContent = months[month - 1] + ' ' + year + ' года'
+
+      const firstWeek = new Date(year, month - 1, 1).getDay()
+      const lastDay = new Date(year, month, 0).getDate()
+      const lastDayPrevuousMonth = new Date(year, month - 1, 0).getDate()
+
+      const ulDays = document.createElement('ul')
+      ulDays.classList.add('ul-days')
+
+      const liArr = []
+
+      for (let i = 1; i <= 7; i++) {
+        const li = document.createElement('li')
+        li.classList.add('day')
+        liArr.push(li)
+      }
+
+      ulDays.append(...liArr)
+
+      if (firstWeek === 1 && lastDay === 28) {
+        calendar.append(ulDays, ulDays.cloneNode(true), ulDays.cloneNode(true), ulDays.cloneNode(true))
+      } else if ((firstWeek === 0 && lastDay > 29) || (firstWeek === 6 && lastDay > 30)) {
+        calendar.append(ulDays, ulDays.cloneNode(true), ulDays.cloneNode(true), ulDays.cloneNode(true), ulDays.cloneNode(true), ulDays.cloneNode(true))
+      } else {
+        calendar.append(ulDays, ulDays.cloneNode(true), ulDays.cloneNode(true), ulDays.cloneNode(true), ulDays.cloneNode(true))
+      }
+
+      const daysTable = calendar.querySelectorAll('.day')
+
+      let count = 1
+      let countdown = lastDayPrevuousMonth
+      let countnext = 1
+
+      function countPrevuous(x) {
+        for (let i = x; i >= 0; i--) {
+          daysTable[i].textContent = countdown
+          daysTable[i].classList.add('other')
+          countdown--
+        }
+      }
+
+      if (firstWeek === 0) {
+        for (let i = 6; i < lastDay + 6; i++) {
+          daysTable[i].textContent = count
+          count++
+        }
+
+        countPrevuous(5)
+      } else {
+        for (let i = firstWeek - 1; i < lastDay + firstWeek - 1; i++) {
+          daysTable[i].textContent = count
+          count++
+        }
+
+        countPrevuous(firstWeek - 2)
+      }
+
+      daysTable.forEach(el => {
+        if (el.textContent === '') {
+          el.textContent = countnext
+          el.classList.add('other')
+          countnext++
+        }
+      })
+
+      calendar.onmouseover = function (event) {
+        const target = event.target
+
+        if (!target.classList.contains('day')) return
+
+        target.style.backgroundColor = 'rgba(107, 52, 52, 0.781)'
+      }
+
+      calendar.onmouseout = function (event) {
+        const target = event.target
+
+        if (!target.classList.contains('day')) return
+
+        target.style.backgroundColor = ''
+      }
+
+      calendar.onclick = function (event) {
+        const target = event.target
+
+        if (!target.classList.contains('day')) return
+
+        daysTable.forEach(el => {
+          if (el.classList.contains('active')) {
+            el.classList.remove('active')
+          }
+        })
+
+        target.classList.add('active')
+      }
+    }
+  </script>
+</body>
+
+</html>
